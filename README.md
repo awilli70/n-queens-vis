@@ -8,6 +8,7 @@ Uses continuation passing style to solve the n-queens problem.
 * Can take any input size from 1-9 (more than enough for educational purposes)
 * Allows users to step through recursive calls and failure continuations
 * Faithful rendition of original uscheme solution (in console, can use N-queens in the same way as uscheme)
+* Rapid notification of a solution, simple navigation through steps (and to the solution itself)
 
 ### Compromises:
 
