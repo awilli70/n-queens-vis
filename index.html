@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N-Queens Visualizer</title>
+    <script
+        src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+        crossorigin="anonymous">
+    </script>
+    <script>
+        const EMPTY = "-"
+        const PRUNED = "X"
+        const QUEEN = "Q"
+        const clone = (items) => items.map(item => item);
+        const fancy_clone = (items) => items.map(item => new Sq(item.row, item.col, item.state));
+        const print_clone = (items) => console.log(items.map(item => item.state));
+        var n;
+        var board;
+        var step = 0;
+        var steps = [];
+
+        $(document).ready(() => {
+            n = 4;
+            board = empty_board(n);
+            display_board(board);
+            display_controls("auto")
+
+            $("#n").change(() => {
+                n = parseInt($("#n").val())
+                board = empty_board(n)
+                display_board(board);
+            })
+
+            $("#first").click(() => {
+                display_board(steps[0]);
+                step = 0;
+            });
+            $("#back").click(() => {
+                if (step - 1 >= 0) {
+                    display_board(steps[step - 1]);
+                    step--;
+                }
+            });
+            $("#forward").click(() => {
+                if (step + 1 < steps.length) {
+                    display_board(steps[step + 1]);
+                    step++;
+                }
+            });
+            $("#last").click(() => {
+                step = steps.length - 1
+                display_board(steps[step])
+            });
+            $("#go").click(() => {
+                N_queens(n, () => {$("#result").html("<h2>No Solution. Attempts Above</h2>")}, 
+                            (p, r) => {$("#result").html("<h2>Solution found. Steps shown above.</h2>")})
+                display_board(steps[0]);
+                display_controls("solved");
+                step = 0;
+            });
+            $("#reset").click(()=> {
+                board = empty_board(n);
+                display_board(board);
+                display_controls("auto")
+                steps = []
+            });
+        });
+
+        class Sq {
+            constructor(row, col, state) {
+                this.col = col;
+                this.row = row;
+                this.state = state;
+            }
+
+            string() {
+                return `${this.row}, ${this.col}`;
+            }
+        }
+
+        function display_controls(mode) {
+            if (mode == "auto") {
+                $("#go").show();
+                $("#first").hide();
+                $("#back").hide();
+                $("#reset").hide();
+                $("#forward").hide();
+                $("#last").hide();
+            } else if (mode == "solved") {
+                $("#go").hide();
+                $("#first").show();
+                $("#back").show();
+                $("#reset").show();
+                $("#forward").show();
+                $("#last").show();
+            }
+        }
+
+        function display_board(b) {
+            let ret_string = "<div style='display: grid; grid-template-columns:"
+            for (let i = 0; i < n; i++) {
+                ret_string += " 4em"
+            }
+            ret_string += "; grid-template-rows:"
+            for (let i = 0; i < n; i++) {
+                ret_string += " 1em"
+            }
+            ret_string += ";'>"
+            b.forEach(square => {
+                ret_string += `<div id="${square.row}-${square.col}">${square.state}</div>`
+            });
+            ret_string += "</div>"
+            $("#gameboard").html(ret_string);
+        }
+
+        function empty_board(size) {
+            const empty_board_with_curr = (x, y) => {
+                let square = new Sq(x, y, EMPTY);
+                if (size <= x && size <= y) {
+                    let arr = [];
+                    arr.push(new Sq(x, y, EMPTY));
+                    return arr;
+                } else if (size <= y) {
+                    let arr = empty_board_with_curr((x + 1), 1);
+                    arr.unshift(new Sq(x, y, EMPTY));
+                    return arr;
+                } else {
+                    let arr = empty_board_with_curr(x, y + 1);
+                    arr.unshift(new Sq(x, y, EMPTY));
+                    return arr;
+                }
+            }
+            return empty_board_with_curr(1, 1);
+        }
+        
+        function unprune_squares(q, safe) {
+            q.state = EMPTY
+            let same_col = (s, s_prime) => {return (s.col == s_prime.col)};
+            let same_row = (s, s_prime) => {return (s.row == s_prime.row)};
+            let abs = (x) => {if (x < 0) {return -1 * x} else {return x}};
+            let same_dia = (s, s_prime) => {return (abs(s.col - s_prime.col) == 
+                                                     (abs(s.row - s_prime.row)))};
+            let prune = (safe_prime) => {
+                if (safe_prime.length == 0) {
+                    steps.push(fancy_clone(board));
+                    return [];
+                } else {
+                    let s = safe_prime[0];
+                    let ss = clone(safe_prime);
+                    ss.shift();
+                    if (same_col(q, s) || (same_row(q, s) || same_dia(q, s))) {
+                        s.state = EMPTY;
+                        return unprune_squares(q, ss);
+                    } else {
+                        let arr = unprune_squares(q, ss);
+                        arr.unshift(s);
+                        return arr;
+                    }
+                }
+            }
+            return prune(safe);
+        }
+
+        function prune_squares(q, safe) {
+            q.state = QUEEN;
+            let same_col = (s, s_prime) => {return (s.col == s_prime.col)};
+            let same_row = (s, s_prime) => {return (s.row == s_prime.row)};
+            let abs = (x) => {if (x < 0) {return -1 * x} else {return x}};
+            let same_dia = (s, s_prime) => {return (abs(s.col - s_prime.col) == 
+                                                     (abs(s.row - s_prime.row)))};
+            let prune = (safe_prime) => {
+                if (safe_prime.length == 0) {
+                    steps.push(fancy_clone(board));
+                    return [];
+                } else {
+                    let s = safe_prime[0];
+                    let ss = clone(safe_prime);
+                    ss.shift();
+                    if (same_col(q, s) || (same_row(q, s) || same_dia(q, s))) {
+                        s.state = PRUNED;
+                        return prune_squares(q, ss);
+                    } else {
+                        let arr = prune_squares(q, ss);
+                        arr.unshift(s);
+                        return arr;
+                    }
+                }
+            }
+            return prune(safe);
+        }
+
+        function N_queens(n, fail, succ) {
+            board = empty_board(n);
+            let place_queens = (placed, ltp, safe, f, s) => {
+                if (ltp == 0) {
+                    return s(placed, f);
+                } else {
+                    if (safe.length == 0) {
+                        return f();
+                    } else {
+                        let pl = clone(placed)
+                        pl.unshift(safe[0]);
+                        let arr = clone(safe);
+                        arr.shift();
+                        return place_queens(pl, ltp - 1,
+                                            prune_squares(safe[0], arr),
+                                            () => {
+                                                    unprune_squares(safe[0], arr);
+                                                    return place_queens(placed, ltp, 
+                                                                       arr, f, s)},
+                                            s)
+                    }
+                }
+            }
+            return place_queens([], n, board, fail, succ);
+        }
+    </script>
+</head>
+<body>
+    <h1>N-Queens Continuation Visualizer</h1>
+    <div id="options">
+        <label for="n">Size of Board:</label>
+        <input type="text" id="n" value="4">
+        <label for="mode">Mode:</label>
+        <select id="mode">
+            <option value="manual">Interactive</option>
+            <option value="auto" selected>Automatic</option>
+        </select>
+    </div>
+    <div id="gameboard"></div>
+    <div id="controls">
+        <button id='go'>GO</button>
+        <button id='first' style="display: none;"><<<</button>
+        <button id='back' style="display: none;"><</button>
+        <button id='reset' style="display: none;">RESET</button>
+        <button id='forward' style="display: none;">></button>
+        <button id='last' style="display: none;">>>></button>
+    </div>
+    <div id="result"></div>
+</body>
+</html>
