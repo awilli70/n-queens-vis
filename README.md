@@ -1,7 +1,13 @@
 # n-queens-vis
 N Queens Visualizer for Comp105
 
-Uses continuation passing style to solve the n-queens problem - has additional features for visual feedback.
+Uses continuation passing style to solve the n-queens problem.
+
+### Features:
+
+* Can take any input size from 1-9 (more than enough for educational purposes)
+* Allows users to step through recursive calls and failure continuations
+* Faithful rendition of original uscheme solution (in console, can use N-queens in the same way as uscheme)
 
 ### Compromises:
 
