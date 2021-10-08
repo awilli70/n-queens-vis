@@ -10,10 +10,12 @@
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous">
     </script>
+    <link rel="stylesheet" href="styles.css">
     <script>
         const EMPTY = "-"
         const PRUNED = "X"
         const QUEEN = "Q"
+        const USED = "U"
         const clone = (items) => items.map(item => item);
         const fancy_clone = (items) => items.map(item => new Sq(item.row, item.col, item.state));
         const print_clone = (items) => console.log(items.map(item => item.state));
@@ -30,8 +32,10 @@
 
             $("#n").change(() => {
                 n = parseInt($("#n").val())
-                board = empty_board(n)
+                board = empty_board(n);
                 display_board(board);
+                display_controls("auto");
+                steps = []
             })
 
             $("#first").click(() => {
@@ -106,11 +110,21 @@
             }
             ret_string += "; grid-template-rows:"
             for (let i = 0; i < n; i++) {
-                ret_string += " 1em"
+                ret_string += " 2em"
             }
             ret_string += ";'>"
             b.forEach(square => {
-                ret_string += `<div id="${square.row}-${square.col}">${square.state}</div>`
+                ret_string += `<div id="${square.row}-${square.col}" class="square"`
+                if (square.state == EMPTY) {
+                    ret_string += "style='background: #ccc;'"
+                } else if (square.state == QUEEN) {
+                    ret_string += "style='background: #7beb7b;'"
+                } else if (square.state == USED) {
+                    ret_string += "style='background: #000;'"
+                } else {
+                    ret_string += "style='background: #eb7b7b;'"
+                }
+                ret_string += `>${square.state}</div>`
             });
             ret_string += "</div>"
             $("#gameboard").html(ret_string);
@@ -137,7 +151,7 @@
         }
         
         function unprune_squares(q, safe) {
-            q.state = EMPTY
+            q.state = USED
             let same_col = (s, s_prime) => {return (s.col == s_prime.col)};
             let same_row = (s, s_prime) => {return (s.row == s_prime.row)};
             let abs = (x) => {if (x < 0) {return -1 * x} else {return x}};
@@ -225,9 +239,9 @@
         <label for="n">Size of Board:</label>
         <input type="text" id="n" value="4">
         <label for="mode">Mode:</label>
-        <select id="mode">
+        <select id="mode" disabled>
             <option value="manual">Interactive</option>
-            <option value="auto" selected>Automatic</option>
+            <option value="auto" selected>Step-Through</option>
         </select>
     </div>
     <div id="gameboard"></div>
@@ -240,5 +254,9 @@
         <button id='last' style="display: none;">>>></button>
     </div>
     <div id="result"></div>
+    <p>This is a visual demonstration of the N-Queens algorithm using continuation passing style.</p>
+    <p>Each step represents a call to prune-squares or a failure continuation.</p>
+    <p>Green is a queen, Red is pruned, Black is a failed placement, Grey is empty</p>
+    <p>This particular solution fails after 9x9 (blows up the stack)</p>
 </body>
 </html>

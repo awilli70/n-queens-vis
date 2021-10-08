@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css?family=Poppins');
+
+body {
+    font-family: Poppins, Arial, sans-serif;
+    margin: auto 5em auto;
+    align-content: center;
+    text-align: center;
+}
+#gameboard div {
+    justify-content: center;
+    column-gap: .2em;
+}
+#gameboard {
+    margin-top: 3em;
+}
+
+#controls {
+    margin-top: 3em;
+}
+
+.square {
+    width: 100%;
+    height: max-content;
+    font-size: larger;
+}
+
